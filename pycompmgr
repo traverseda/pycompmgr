@@ -1,0 +1,80 @@
+#!/usr/bin/python
+
+import struct, time
+
+import xcb
+
+import pycomp
+import pycomp.event as event
+import pycomp.render_util as render_util
+
+from pycomp.window import Window
+
+# This redirects all child windows of the root window to off screen
+# storage. Once we do this, we are responsible for painting the windows
+# back to the screen.
+pycomp.composite.RedirectSubwindows(
+    pycomp.root,
+    xcb.composite.Redirect.Manual
+)
+
+# Change the attributes of the root window so X sends us the events
+# we want. i.e., Configure, Circulate, Map/Unmap, Create/Destroy, etc...
+pycomp.core.ChangeWindowAttributes(
+    pycomp.root,
+    xcb.xproto.CW.EventMask,
+    [
+        xcb.xproto.EventMask.KeyPress |
+        xcb.xproto.EventMask.KeyRelease |
+        xcb.xproto.EventMask.ButtonRelease |
+        xcb.xproto.EventMask.SubstructureNotify |
+        xcb.xproto.EventMask.StructureNotify |
+        xcb.xproto.EventMask.PropertyChange
+    ]
+)
+
+# Make initial requests for windows.
+for window in pycomp.query_tree:
+    w = Window(window)
+
+# Wrap up the request for each window...
+for window in pycomp.query_tree:
+    w = pycomp.windows[window]
+
+    if not w.fetch_attrs() or not w.fetch_geometry():
+        w.remove()
+        continue
+
+    w.manage()
+
+# Paint the background first
+# (There might be a flicker of grey, or the background might
+# turn grey if there are problems here.)
+pycomp.paint_background()
+Window.paint_all()
+pycomp.paint_buffer()
+pycomp.sync()
+
+# Pushes through the draw requests
+pycomp.sync()
+
+event.paint = True
+
+while True:
+    e = pycomp.conn.wait_for_event()
+    event.handle(e)
+
+    while True:
+        e = pycomp.conn.poll_for_event()
+        if not e:
+            break
+        else:
+            event.handle(e)
+
+    #if event.paint:
+    pycomp.paint_background_to_buffer()
+    Window.paint_all()
+    pycomp.paint_buffer()
+    pycomp.sync()
+
+    event.paint = False
