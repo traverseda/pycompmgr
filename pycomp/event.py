@@ -120,5 +120,5 @@ def handle(e):
 
         w.damaged = True
         paint = True
-    else:
-        print e
+    #else:
+        #print e
