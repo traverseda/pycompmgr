@@ -1,0 +1,5 @@
+The number one weakness with pycompmgr is that it is written in Python, however, I believe it is also the source of its greatest strength. In particular, it makes writing a compositing manager a bit more accessible to others, as well as making extra effects easier to develop and maintain.
+
+I set out to write pycompmgr in hopes to deepen my understanding of X, and to learn how to write a compositing manager. I feel that I have fully accomplished that goal, and while I still have a lot to learn (especially with regards to the Render X extension, which is used to manipulate the actual windows), I have certainly been successful in creating a functioning compositing manager.
+
+In developing pycompmgr, I have also been forced to better learn how to translate code that has been written in XCB to code that needs to be written using xpyb. In particular, documentation for xpyb doesn't exist--one has to use the documentation for XCB and translate it to Python.
